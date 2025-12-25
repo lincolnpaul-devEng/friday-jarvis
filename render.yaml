@@ -1,9 +1,9 @@
 services:
   - type: web
     name: friday-jarvis
-    runtime: python311
+    runtime: python3.10
     buildCommand: pip install -r requirements.txt
-    startCommand: python agent.py
+    startCommand: python -u agent.py
     envVars:
       - key: PYTHONUNBUFFERED
         value: "1"
