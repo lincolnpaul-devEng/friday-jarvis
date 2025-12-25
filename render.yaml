@@ -8,5 +8,5 @@ services:
       - key: PYTHONUNBUFFERED
         value: "1"
       - key: PYTHON_VERSION
-        value: "3.11"
+        value: "3.11.6"
     plan: free
