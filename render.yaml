@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: friday-jarvis
+    runtime: python311
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m livekit.agents agent
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: LIVEKIT_URL
+        value: wss://friday-uk2toy5r.livekit.cloud
+      - key: LIVEKIT_API_KEY
+        value: APIYnzgriSNVjbG
+      - key: LIVEKIT_API_SECRET
+        value: 0nICJFFHqmYECGsZ31pUR3EE98KUxaUbPlfPC4IFirX
+    plan: free
