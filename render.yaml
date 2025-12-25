@@ -3,7 +3,7 @@ services:
     name: friday-jarvis
     runtime: python311
     buildCommand: pip install -r requirements.txt
-    startCommand: python -m livekit.agents agent
+    startCommand: python agent.py
     envVars:
       - key: PYTHONUNBUFFERED
         value: "1"
@@ -13,4 +13,10 @@ services:
         value: APIYnzgriSNVjbG
       - key: LIVEKIT_API_SECRET
         value: 0nICJFFHqmYECGsZ31pUR3EE98KUxaUbPlfPC4IFirX
+      - key: GOOGLE_API_KEY
+        value: AIzaSyAl7yKW8S26O9hv5PSVeeNOEBv90Cpzu7Y
+      - key: GMAIL_APP_PASSWORD
+        value: gnslnffozasyyppi
+      - key: GMAIL_USER
+        value: paullincoln428@gmail.com
     plan: free
