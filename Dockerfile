@@ -25,4 +25,4 @@ ENV PYTHONUNBUFFERED=1
 ENV PORT=8080
 
 # Run the agent
-CMD ["python", "agent.py"]
+CMD ["python", "agent.py", "dev"]
