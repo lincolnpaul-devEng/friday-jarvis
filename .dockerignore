@@ -1,9 +1,0 @@
-__pycache__
-.git
-.env
-*.pyc
-.pytest_cache
-.venv
-venv
-Maya
-KMS

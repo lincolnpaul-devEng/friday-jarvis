@@ -2,11 +2,10 @@ services:
   - type: web
     name: friday-jarvis
     runtime: python
+    pythonVersion: 3.11
     buildCommand: pip install -r requirements.txt
     startCommand: python agent.py dev
     envVars:
       - key: PYTHONUNBUFFERED
         value: "1"
-      - key: PYTHON_VERSION
-        value: "3.11.6"
     plan: free

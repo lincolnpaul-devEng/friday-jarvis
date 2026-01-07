@@ -1,4 +1,5 @@
 import logging
+import re
 from livekit.agents import function_tool, RunContext
 import requests
 from langchain_community.tools import DuckDuckGoSearchRun
@@ -73,6 +74,15 @@ async def send_email(
             logging.error("Gmail credentials not found in environment variables")
             return "Email sending failed: Gmail credentials not configured."
         
+        # Validate email format
+        if not _is_valid_email(to_email):
+            logging.error(f"Invalid recipient email format: {to_email}")
+            return f"Email sending failed: Invalid recipient email '{to_email}'."
+        
+        if cc_email and not _is_valid_email(cc_email):
+            logging.error(f"Invalid CC email format: {cc_email}")
+            return f"Email sending failed: Invalid CC email '{cc_email}'."
+        
         # Create message
         msg = MIMEMultipart()
         msg['From'] = gmail_user
@@ -88,25 +98,42 @@ async def send_email(
         # Attach message body
         msg.attach(MIMEText(message, 'plain'))
         
-        # Connect to Gmail SMTP server
-        server = smtplib.SMTP(smtp_server, smtp_port)
-        server.starttls()  # Enable TLS encryption
-        server.login(gmail_user, gmail_password)
+        # Connect to Gmail SMTP server with timeout
+        server = smtplib.SMTP(smtp_server, smtp_port, timeout=10)
+        try:
+            server.starttls()  # Enable TLS encryption
+            server.login(gmail_user, gmail_password)
+            
+            # Send email
+            text = msg.as_string()
+            server.sendmail(gmail_user, recipients, text)
+            
+            logging.info(f"Email sent successfully to {to_email}" + (f" (CC: {cc_email})" if cc_email else ""))
+            return f"Email sent successfully to {to_email}" + (f" (CC: {cc_email})" if cc_email else "")
+        finally:
+            server.quit()
         
-        # Send email
-        text = msg.as_string()
-        server.sendmail(gmail_user, recipients, text)
-        server.quit()
-        
-        logging.info(f"Email sent successfully to {to_email}")
-        return f"Email sent successfully to {to_email}"
-        
-    except smtplib.SMTPAuthenticationError:
-        logging.error("Gmail authentication failed")
-        return "Email sending failed: Authentication error. Please check your Gmail credentials."
+    except smtplib.SMTPAuthenticationError as e:
+        logging.error(f"Gmail authentication failed: {e}")
+        return "Email sending failed: Authentication error. Check Gmail credentials and ensure App Password is used (not regular password)."
+    except smtplib.SMTPRecipientsRefused as e:
+        logging.error(f"SMTP recipients refused: {e}")
+        return f"Email sending failed: Invalid recipient email address."
+    except smtplib.SMTPSenderRefused as e:
+        logging.error(f"SMTP sender refused: {e}")
+        return f"Email sending failed: Sender email not authorized."
     except smtplib.SMTPException as e:
         logging.error(f"SMTP error occurred: {e}")
         return f"Email sending failed: SMTP error - {str(e)}"
     except Exception as e:
         logging.error(f"Error sending email: {e}")
         return f"An error occurred while sending email: {str(e)}"
+
+
+def _is_valid_email(email: str) -> bool:
+    """
+    Basic email validation.
+    """
+    import re
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return re.match(pattern, email) is not None

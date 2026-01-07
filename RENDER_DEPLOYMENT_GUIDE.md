@@ -1,6 +1,9 @@
 # Render.com Deployment Guide - Friday JARVIS Backend
 **Complete Step-by-Step (No Credit Card Required)**
 
+⚠️ **IMPORTANT: Docker-Free Deployment**
+This guide uses **pure Python deployment** on Render. Docker images have been removed to avoid conflicts with Render's native Python runtime.
+
 ---
 
 ## Why Render Over Others?
@@ -43,65 +46,65 @@
 
 ---
 
-## STEP 2: Create render.yaml Config (5 minutes)
+## STEP 2: Configuration Files (Already Set Up) ✅
 
-Your repo needs a `render.yaml` file so Render knows how to deploy your Python agent.
+Your repo now has the correct configuration for Render **without Docker**:
 
-### 2.1 Create render.yaml in Project Root
+### 2.1 render.yaml Configuration
 
-In `c:\Users\paull\Desktop\friday_jarvis\`, create file: **`render.yaml`**
+**File:** `render.yaml`
 
 ```yaml
 services:
   - type: web
     name: friday-jarvis
-    runtime: python311
+    runtime: python
+    pythonVersion: 3.11
     buildCommand: pip install -r requirements.txt
-    startCommand: python -m livekit.agents agent
+    startCommand: python agent.py dev
     envVars:
       - key: PYTHONUNBUFFERED
         value: "1"
-      - key: LIVEKIT_URL
-        value: wss://friday-uk2toy5r.livekit.cloud
-      - key: LIVEKIT_API_KEY
-        value: APIYnzgriSNVjbG
-      - key: LIVEKIT_API_SECRET
-        value: 0nICJFFHqmYECGsZ31pUR3EE98KUxaUbPlfPC4IFirX
-      - key: GOOGLE_API_KEY
-        value: your_google_api_key
-      - key: GMAIL_APP_PASSWORD
-        value: your_gmail_app_password
-      - key: GMAIL_USER
-        value: your_email@gmail.com
-    plan: free
-    healthCheckPath: /
-```
-
-**Alternative: Use Render UI for secrets (more secure)**
-If you prefer not to hardcode secrets in the YAML:
-```yaml
-services:
-  - type: web
-    name: friday-jarvis
-    runtime: python311
-    buildCommand: pip install -r requirements.txt
-    startCommand: python -m livekit.agents agent
     plan: free
 ```
-Then add env vars in Render dashboard later (STEP 4).
 
-### 2.2 Push to GitHub
-```powershell
-cd C:\Users\paull\Desktop\friday_jarvis
+✅ **No Docker needed!** Render uses Python runtime directly. This command links to LiveKit Playground.
 
-git add render.yaml
-git commit -m "Add Render deployment config"
-git push origin main
+### 2.2 Dependencies Configuration
+
+**File:** `requirements.txt`
+
+All required packages are listed:
 ```
+livekit-agents
+livekit-plugins-openai
+livekit-plugins-silero
+livekit-plugins-google
+livekit-plugins-noise-cancellation
+mem0ai
+duckduckgo-search
+langchain_community
+requests
+python-dotenv
+```
+
+### 2.3 Environment Variables
+
+**File:** `.env.example`
+
+All required environment variables are documented. Render will use your `.env` secrets at runtime.
+
+### 2.4 Removed Files ✅
+
+The following Docker files have been **removed** to avoid deployment conflicts:
+- ❌ `Dockerfile` (removed)
+- ❌ `.dockerignore` (removed)
+
+This ensures Render uses its native Python 3.11 runtime without Docker overhead.
 
 ---
 
-## STEP 3: Create Service on Render (5 minutes)
+## STEP 3: Create Render.yaml Config (5 minutes)
 
 ### 3.1 Go to Render Dashboard
 - Open: https://dashboard.render.com
@@ -113,7 +116,7 @@ git push origin main
 - Search for **"friday-jarvis"**
 - Click **"Connect"** next to your repo
 
-### 3.3 Configure Service
+### 4.2 Configure Service
 
 **Fill in these fields:**
 
@@ -123,12 +126,14 @@ git push origin main
 | **Root Directory** | (leave blank) |
 | **Runtime** | Python 3.11 |
 | **Build Command** | `pip install -r requirements.txt` |
-| **Start Command** | `python -m livekit.agents agent` |
+| **Start Command** | `python agent.py dev` |
 | **Plan** | Free |
 
-### 3.4 Environment Variables (Optional - if not in YAML)
+### 4.3 Environment Variables (Recommended: Use Dashboard)
 
-If you didn't hardcode in `render.yaml`, add here:
+### 4.3 Environment Variables (Recommended: Use Dashboard)
+
+**Recommended approach:** Add secrets via Render dashboard (more secure than hardcoding):
 
 ```
 LIVEKIT_URL=wss://friday-uk2toy5r.livekit.cloud
@@ -137,23 +142,27 @@ LIVEKIT_API_SECRET=0nICJFFHqmYECGsZ31pUR3EE98KUxaUbPlfPC4IFirX
 GOOGLE_API_KEY=your_key_here
 GMAIL_APP_PASSWORD=your_password_here
 GMAIL_USER=your_email@gmail.com
+OPENROUTER_API_KEY=your_key_here (optional)
 ```
 
-### 3.5 Click **"Create Web Service"**
+Each value goes in a separate `Environment Variable` field in the Render dashboard.
+
+### 4.4 Click **"Create Web Service"**
 
 Render will:
 1. Clone your GitHub repo
-2. Install dependencies from `requirements.txt`
-3. Start your Python agent
-4. Assign a public URL like: `https://friday-jarvis-xxxx.onrender.com`
+2. Install Python 3.11
+3. Install dependencies from `requirements.txt`
+4. Start with `python agent.py dev` (LiveKit Playground integration)
+5. Assign a public URL like: `https://friday-jarvis-xxxx.onrender.com`
 
 **Wait 2-3 minutes** for deployment to complete.
 
 ---
 
-## STEP 4: Get Your Service URL (1 minute)
+## STEP 5: Get Your Service URL (1 minute)
 
-### 4.1 Find URL in Render Dashboard
+### 5.1 Find URL in Render Dashboard
 
 Once deployment completes (green checkmark):
 - Go to https://dashboard.render.com
@@ -165,14 +174,15 @@ Example:
 https://friday-jarvis-abc123.onrender.com
 ```
 
-### 4.2 Copy and Save This URL
+### 5.2 Copy and Save This URL
+
 You'll need it in the next step.
 
 ---
 
-## STEP 5: Update Android App (5 minutes)
+## STEP 6: Update Android App (5 minutes)
 
-### 5.1 Edit TokenExt.kt
+### 6.1 Edit TokenExt.kt
 
 File: `Maya\app\src\main\java\io\livekit\android\example\voiceassistant\TokenExt.kt`
 
@@ -181,14 +191,14 @@ package io.livekit.android.example.voiceassistant
 
 const val sandboxID = ""  // Keep empty - using custom backend
 
-// Replace with YOUR Render URL from STEP 4
+// Replace with YOUR Render URL from STEP 5
 const val hardcodedUrl = "https://friday-jarvis-abc123.onrender.com"
 
 // Leave empty for now - we'll test with the URL first
 const val hardcodedToken = ""
 ```
 
-### 5.2 Build APK
+### 6.2 Build APK
 
 ```powershell
 cd C:\Users\paull\Desktop\friday_jarvis\Maya
@@ -198,7 +208,7 @@ cd C:\Users\paull\Desktop\friday_jarvis\Maya
 
 APK appears at: `Maya\app\build\outputs\apk\release\app-release.apk`
 
-### 5.3 Optional: Install on Device
+### 6.3 Optional: Install on Device
 
 ```powershell
 adb install Maya\app\build\outputs\apk\release\app-release.apk
@@ -206,9 +216,9 @@ adb install Maya\app\build\outputs\apk\release\app-release.apk
 
 ---
 
-## STEP 6: View Logs & Verify (2 minutes)
+## STEP 7: View Logs & Verify (2 minutes)
 
-### 6.1 Open Render Logs
+### 7.1 Open Render Logs
 
 - In Render dashboard for "friday-jarvis" service
 - Scroll to **"Logs"** section
@@ -219,14 +229,14 @@ adb install Maya\app\build\outputs\apk\release\app-release.apk
   Waiting for connections...
   ```
 
-### 6.2 Test Connection from Android
+### 7.2 Test Connection from Android
 
 1. Open Friday JARVIS app on device
 2. Tap **"[ INITIALIZE CALL ]"**
 3. Grant microphone permission
 4. Say something to test
 
-### 6.3 Watch Logs for Activity
+### 7.3 Watch Logs for Activity
 
 In Render Logs, you should see:
 ```
@@ -238,7 +248,9 @@ Response: "Hello! How can I assist you?"
 
 ---
 
-## STEP 7: Known Limitations & Solutions
+## STEP 8: Known Limitations & Solutions
+
+### ⚠️ Free Plan Limitations
 
 ### ⚠️ Free Plan Limitations
 
@@ -268,16 +280,16 @@ Or use a free service like [UptimeRobot](https://uptimerobot.com):
 
 ---
 
-## STEP 8: Upgrade Path (When Needed)
+## STEP 9: Upgrade Path (When Needed)
 
 ### Free → Paid (if you hit limits)
 
-**When to upgrade:**
+### When to upgrade:
 - Multiple concurrent users
 - More than 750 compute hours/month
 - Want faster startup (no idle spin-down)
 
-**Upgrade options:**
+### Upgrade options:
 ```
 Free Plan:     $0/month (750 hours)
 Pro Plan:      $7/month (unlimited compute, no spin-down)
@@ -287,7 +299,7 @@ Click **"Plan"** in Render dashboard → **"Upgrade to Pro"** → Add credit car
 
 ---
 
-## STEP 9: Troubleshooting
+## STEP 10: Troubleshooting
 
 ### Issue: "Build failed"
 ```
@@ -327,7 +339,7 @@ Solution:
 
 ---
 
-## STEP 10: Monitor & Maintain
+## STEP 11: Monitor & Maintain
 
 ### Weekly Checks
 - [ ] Open Render dashboard → Check service status
@@ -397,17 +409,38 @@ git push origin main
 
 ---
 
-## Estimated Timeline
+## STEP 12: Estimated Timeline
 
 - **STEP 1** (Sign up): 2 min
-- **STEP 2** (Create render.yaml): 5 min
-- **STEP 3** (Deploy): 5 min
-- **STEP 4** (Get URL): 1 min
-- **STEP 5** (Update Android): 5 min
-- **STEP 6** (Verify): 2 min
+- **STEP 2** (Configuration check): 1 min
+- **STEP 3** (Deploy service): 5 min
+- **STEP 4** (Build/deployment): 2 min
+- **STEP 5** (Get URL): 1 min
+- **STEP 6** (Update Android): 5 min
+- **STEP 7** (Verify): 2 min
 
-**Total: ~20 minutes to production** 🚀
+**Total: ~18 minutes to production** 🚀
 
 ---
 
-**Ready? Let's deploy!**
+## Key Advantages of This Docker-Free Setup
+
+✅ **Faster deployment** - No Docker build overhead  
+✅ **Smaller footprint** - Native Python runtime only  
+✅ **Better cold starts** - Render Python runtime is optimized  
+✅ **Easier debugging** - Render logs show Python output directly  
+✅ **Fewer conflicts** - No Docker version issues  
+
+---
+
+## Next Steps After Deployment
+
+1. **Test with multiple devices** (if upgraded to paid)
+2. **Monitor logs daily** for first week
+3. **Optimize agent** based on real usage
+4. **Add error alerting** (optional)
+5. **Plan scaling** as user base grows
+
+---
+
+**Ready? Let's deploy!** 🚀
