@@ -4,8 +4,11 @@ services:
     runtime: python
     pythonVersion: 3.11
     buildCommand: pip install -r requirements.txt
-    startCommand: python agent.py dev
+    startCommand: python agent.py
     envVars:
       - key: PYTHONUNBUFFERED
         value: "1"
+      - key: PORT
+        value: "10000"
     plan: free
+    healthCheckPath: /health
