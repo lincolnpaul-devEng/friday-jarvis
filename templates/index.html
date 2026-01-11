@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Friday - Your Personal AI Assistant</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 2.5rem;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .features {
+            text-align: left;
+            margin-bottom: 2rem;
+        }
+
+        .features h3 {
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .features ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .features li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .features li:before {
+            content: "🔍 ";
+            margin-right: 0.5rem;
+        }
+
+        .features li:nth-child(2):before { content: "🌤️ "; }
+        .features li:nth-child(3):before { content: "📨 "; }
+        .features li:nth-child(4):before { content: "📷 "; }
+        .features li:nth-child(5):before { content: "🗣️ "; }
+        .features li:nth-child(6):before { content: "📝 "; }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 1rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .status {
+            margin-top: 1rem;
+            padding: 0.5rem;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .status.error {
+            background: #fee;
+            color: #c33;
+            border: 1px solid #fcc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 Friday</h1>
+        <p class="subtitle">Your Personal AI Assistant</p>
+
+        <div class="features">
+            <h3>Features</h3>
+            <ul>
+                <li>Web Search</li>
+                <li>Weather Checking</li>
+                <li>Email Sending</li>
+                <li>Camera Vision</li>
+                <li>Voice Interaction</li>
+                <li>Text Chat</li>
+            </ul>
+        </div>
+
+        <button class="btn" onclick="createRoom()">Start Voice Conversation</button>
+
+        <div id="status" class="status"></div>
+    </div>
+
+    <script>
+        async function createRoom() {
+            const btn = document.querySelector('.btn');
+            const status = document.getElementById('status');
+
+            btn.disabled = true;
+            btn.textContent = 'Creating room...';
+
+            try {
+                const response = await fetch('/create-room', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    window.location.href = `/join-room/${data.room_name}`;
+                } else {
+                    throw new Error(data.error || 'Failed to create room');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                status.textContent = 'Error: ' + error.message;
+                status.className = 'status error';
+                status.style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = 'Start Voice Conversation';
+            }
+        }
+    </script>
+</body>
+</html>

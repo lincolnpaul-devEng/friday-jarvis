@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Friday - Voice Assistant</title>
+    <script src="https://cdn.jsdelivr.net/npm/@livekit/components@0.7.0/dist/livekit-components.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1a1a1a;
+            color: white;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+        }
+
+        .container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            padding: 1rem;
+            background: rgba(0,0,0,0.5);
+            text-align: center;
+            border-bottom: 1px solid #333;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .room-container {
+            flex: 1;
+            position: relative;
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        .btn.danger {
+            background: #e53e3e;
+        }
+
+        .btn.danger:hover {
+            background: #c53030;
+        }
+
+        .status {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: rgba(0,0,0,0.7);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .status.connecting {
+            background: rgba(255,165,0,0.7);
+        }
+
+        .status.connected {
+            background: rgba(34,197,94,0.7);
+        }
+
+        .status.error {
+            background: rgba(239,68,68,0.7);
+        }
+
+        #livekit-room {
+            width: 100%;
+            height: 100%;
+        }
+
+        .instructions {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            max-width: 400px;
+            background: rgba(0,0,0,0.8);
+            padding: 2rem;
+            border-radius: 20px;
+            display: none;
+        }
+
+        .instructions.show {
+            display: block;
+        }
+
+        .instructions h2 {
+            margin-top: 0;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧠 Friday - Voice Assistant</h1>
+            <div class="status" id="status">Connecting...</div>
+        </div>
+
+        <div class="room-container">
+            <div class="instructions show" id="instructions">
+                <h2>Welcome to Friday!</h2>
+                <p>Click "Connect" to start your voice conversation with the AI assistant.</p>
+                <p><strong>Available commands:</strong></p>
+                <ul style="text-align: left;">
+                    <li>"What's the weather like?"</li>
+                    <li>"Search for..."</li>
+                    <li>"Send an email..."</li>
+                    <li>"Take a photo" (if camera available)</li>
+                </ul>
+            </div>
+
+            <div id="livekit-room"></div>
+
+            <div class="controls">
+                <button class="btn" id="connectBtn" onclick="connectToRoom()">Connect</button>
+                <button class="btn danger" id="disconnectBtn" onclick="disconnectFromRoom()" style="display: none;">Disconnect</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const roomName = '{{ room_name }}';
+        let room = null;
+        let token = null;
+
+        async function getToken() {
+            try {
+                const response = await fetch(`/token?roomName=${roomName}&identity=user_${Date.now()}`);
+                if (!response.ok) {
+                    throw new Error('Failed to get token');
+                }
+                const data = await response.json();
+                return data.token;
+            } catch (error) {
+                console.error('Error getting token:', error);
+                updateStatus('Error getting token', 'error');
+                throw error;
+            }
+        }
+
+        async function connectToRoom() {
+            const connectBtn = document.getElementById('connectBtn');
+            const disconnectBtn = document.getElementById('disconnectBtn');
+            const instructions = document.getElementById('instructions');
+
+            connectBtn.disabled = true;
+            connectBtn.textContent = 'Connecting...';
+            updateStatus('Connecting...', 'connecting');
+
+            try {
+                token = await getToken();
+
+                room = new LivekitClient.Room();
+                room.on('connected', () => {
+                    updateStatus('Connected! Start speaking...', 'connected');
+                    connectBtn.style.display = 'none';
+                    disconnectBtn.style.display = 'inline-block';
+                    instructions.classList.remove('show');
+                });
+
+                room.on('disconnected', () => {
+                    updateStatus('Disconnected', 'error');
+                    connectBtn.style.display = 'inline-block';
+                    disconnectBtn.style.display = 'none';
+                    instructions.classList.add('show');
+                });
+
+                await room.connect('{{ LIVEKIT_URL }}', token);
+                updateStatus('Connected!', 'connected');
+
+            } catch (error) {
+                console.error('Connection error:', error);
+                updateStatus('Connection failed', 'error');
+                connectBtn.disabled = false;
+                connectBtn.textContent = 'Connect';
+            }
+        }
+
+        async function disconnectFromRoom() {
+            if (room) {
+                await room.disconnect();
+            }
+        }
+
+        function updateStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status ' + type;
+        }
+
+        // Auto-connect on page load (optional)
+        // connectToRoom();
+    </script>
+</body>
+</html>
