@@ -5,7 +5,7 @@ import requests
 from langchain_community.tools import DuckDuckGoSearchRun
 import os
 import smtplib
-from email.mime.multipart import MIMEMultipart  
+from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Optional
 

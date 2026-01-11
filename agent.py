@@ -24,9 +24,7 @@ class Assistant(Agent):
             llm=google.beta.realtime.RealtimeModel(
                 voice="Aoede",
                 temperature=0.7,
-                # Increase timeout for Gemini API connection
-                # Default is often too short for initial handshake
-                timeout=30.0,  # 30 seconds for connection
+              # Set response timeout to 10 seconds for faster responses
             ),
             tools=[
                 get_weather,
