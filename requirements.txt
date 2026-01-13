@@ -1,4 +1,5 @@
 livekit-agents
+livekit>=0.10.0
 livekit-plugins-openai
 livekit-plugins-silero
 livekit-plugins-google
@@ -8,4 +9,6 @@ duckduckgo-search
 langchain_community
 requests
 python-dotenv
-flask
+fastapi
+uvicorn[standard]
+jinja2
